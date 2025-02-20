@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sqlite/apiClient/api_client.dart';
 import 'package:sqlite/models/user_model.dart';
@@ -19,7 +18,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final ApiClient _apiClient = ApiClient();
   // List<User> remoteUsers = [];
 
+  // final remoteUsersProvider = Provider((ref) {
+  //   return remoteUsers;
+  // });
+
   List<User> users = [];
+
   final DatabaseService _databaseService = DatabaseService.instance;
 
   bool _isLoading = true;
@@ -176,8 +180,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 _genderController.text,
                                                 _mailController.text);
                                             fetchDataLocal();
-                                            setState(
-                                                () {}); // Update UI if necessary
+                                            setState(() {});
+                                            SnackBar(
+                                                content: Text('updated user'));
                                             Navigator.pop(context);
                                           } catch (e) {
                                             print("Error adding user: $e");
@@ -191,6 +196,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: ListTile(
                           contentPadding: EdgeInsets.all(10),
                           tileColor: Colors.purple.shade50,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(0),
+                              side: BorderSide(color: Colors.grey, width: 1)),
                           trailing: IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
@@ -277,7 +285,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     _genderController.text,
                                     _mailController.text);
                                 fetchDataLocal();
-                                setState(() {}); // Update UI if necessary
+                                SnackBar(content: Text("added user"));
+                                setState(() {});
                                 Navigator.pop(context);
                               } catch (e) {
                                 print("Error adding user: $e");
