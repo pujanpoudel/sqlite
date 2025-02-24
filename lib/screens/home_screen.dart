@@ -128,7 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         error: (error, stackTrace) => Center(child: Text("error: $error")),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () {
           showDialog(context: context, builder: (_) => _addUserDialog());
         },
