@@ -5,12 +5,12 @@ class ConnectivityService {
 
   Future<bool> isConnected() async {
     var result = await _connectivity.checkConnectivity();
-    return result != ConnectivityResult.none;
+    return result.first != ConnectivityResult.none;
   }
 
   Stream<bool> get connectionStream async* {
     yield await isConnected();
     yield* _connectivity.onConnectivityChanged
-        .map((result) => result != ConnectivityResult.none);
+        .map((result) => result.first != ConnectivityResult.none);
   }
 }
