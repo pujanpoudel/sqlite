@@ -4,10 +4,10 @@ import '../models/user_model.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 
-final userProvider = FutureProvider<List<User>>((ref) async {
-  final apiClient = ref.watch(apiClientProvider);
-  return await apiClient.getUsers();
-});
+// final userProvider = FutureProvider<List<User>>((ref) async {
+//   final apiClient = ref.watch(apiClientProvider);
+//   return await apiClient.getUsers();
+// });
 
 class ApiClient {
   final Dio _dio = Dio(BaseOptions(

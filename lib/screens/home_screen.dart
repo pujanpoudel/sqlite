@@ -1,39 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqlite/apiClient/api_client.dart';
+
 import 'package:sqlite/models/user_model.dart';
 import '../services/connectivity_service.dart';
 import '../services/database_service.dart';
 
-final userProvider = FutureProvider<List<User>>((ref) async {
-  final apiClient = ref.watch(apiClientProvider);
-  final ConnectivityService _connectivityService = ConnectivityService();
-  final DatabaseService _databaseService = DatabaseService.instance;
-  bool isConnected = await _connectivityService.isConnected();
+final userNotifierProvider =
+    StateNotifierProvider<UserNotifier, List<User>>((ref) {
+  return UserNotifier();
+});
 
-  // Future addToLocalDatabase(List<User> users) async {
-  //   for (var item in users) {
-  //     await _databaseService.addUserFromRemote(
-  //         item.name, item.age, item.gender, item.email);
-  //   }
+class UserNotifier extends StateNotifier<List<User>> {
+  UserNotifier() : super([]) {}
+
+  // final DatabaseService _databaseService = DatabaseService.instance;
+  // final ConnectivityService _connectivityService = ConnectivityService();
+
+  // Future<void> addToLocalDatabase(List<User> users) async {
+  //   await Future.wait(users.map((item) => _databaseService.addUserFromRemote(
+  //       item.name, item.age, item.gender, item.email)));
   // }
 
-  Future addToLocalDatabase(List<User> users) async {
-    await Future.wait(users.map((item) => _databaseService.addUserFromRemote(
-        item.name, item.age, item.gender, item.email)));
-  }
+  // Future<List<User>> fetchLocally() async {
+  //   return await _databaseService.getUser();
+  // }
 
-  Future<List<User>> fetchLocally = _databaseService.getUser();
-  bool isLocalEmpty = fetchLocally.toString().isEmpty;
+  // Future<void> _initialize() async {
+  //   bool isConnected = await _connectivityService.isConnected();
 
-  if (isConnected) {
-    var users = await apiClient.getUsers();
-    addToLocalDatabase(users);
-    return users;
-  } else {
-    return await fetchLocally;
-  }
-});
+  //   if (isConnected) {
+  //     var users = await ApiClient.getUsers();
+  //     await addToLocalDatabase(users);
+  //     state = users;
+  //   } else {
+  //     var localUsers = await fetchLocally();
+  //     state = localUsers;
+  //   }
+  // }
+}
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -62,7 +66,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final usersAsyncValue = ref.watch(userProvider);
+    final usersAsyncValue = ref.watch(userNotifierProvider);
+    final users = ref.watch(userNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -85,7 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             backgroundColor: Colors.blue,
             strokeWidth: 4.0,
             onRefresh: () async {
-              ref.invalidate(userProvider);
+              ref.invalidate(users);
               return Future<void>.delayed(const Duration(seconds: 2));
             },
             child: ListView.builder(
@@ -109,7 +114,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       icon: const Icon(Icons.delete),
                       onPressed: () async {
                         await _databaseService.deleteUser(user.id);
-                        ref.invalidate(userProvider);
+                        ref.invalidate(users);
                       },
                     ),
                     title: Text(
@@ -157,7 +162,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _genderController.text,
               _mailController.text,
             );
-            ref.invalidate(userProvider);
+            ref.invalidate(users);
             Navigator.pop(context);
           },
           child: const Text('Update'),
@@ -186,7 +191,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _genderController.text,
               _mailController.text,
             );
-            ref.invalidate(userProvider);
+            ref.invalidate(users);
             Navigator.pop(context);
           },
           child: const Text('Add'),
