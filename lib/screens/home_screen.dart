@@ -7,7 +7,32 @@ import '../services/database_service.dart';
 
 final userProvider = FutureProvider<List<User>>((ref) async {
   final apiClient = ref.watch(apiClientProvider);
-  return await apiClient.getUsers();
+  final ConnectivityService _connectivityService = ConnectivityService();
+  final DatabaseService _databaseService = DatabaseService.instance;
+  bool isConnected = await _connectivityService.isConnected();
+
+  // Future addToLocalDatabase(List<User> users) async {
+  //   for (var item in users) {
+  //     await _databaseService.addUserFromRemote(
+  //         item.name, item.age, item.gender, item.email);
+  //   }
+  // }
+
+  Future addToLocalDatabase(List<User> users) async {
+    await Future.wait(users.map((item) => _databaseService.addUserFromRemote(
+        item.name, item.age, item.gender, item.email)));
+  }
+
+  Future<List<User>> fetchLocally = _databaseService.getUser();
+  bool isLocalEmpty = fetchLocally.toString().isEmpty;
+
+  if (isConnected) {
+    var users = await apiClient.getUsers();
+    addToLocalDatabase(users);
+    return users;
+  } else {
+    return await fetchLocally;
+  }
 });
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -18,30 +43,21 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final ConnectivityService _connectivityService = ConnectivityService();
-  bool _isConnected = true;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _mailController = TextEditingController();
   final DatabaseService _databaseService = DatabaseService.instance;
-
-  TextEditingController _nameController = TextEditingController();
-  TextEditingController _ageController = TextEditingController();
-  TextEditingController _genderController = TextEditingController();
-  TextEditingController _mailController = TextEditingController();
-
+  var hasInternet = false;
   @override
   void initState() {
     super.initState();
-    _connectivityService.connectionStream.listen((status) {
-      setState(() {
-        _isConnected = status;
-      });
-    });
   }
 
-  addToLocalDatabase(List<User> users) async {
-    for (var item in users) {
-      await _databaseService.addUserFromRemote(
-          item.name, item.age, item.gender, item.email);
-    }
+  checkInternet() async {
+    final ConnectivityService _connectivityService = ConnectivityService();
+    bool isConnected = await _connectivityService.isConnected();
+    hasInternet = isConnected;
   }
 
   @override
@@ -51,27 +67,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: _isConnected
-            ? const Text("Users")
-            : Container(
-                padding: const EdgeInsets.all(10),
-                color: Colors.red,
-                child: const Text(
-                  "Internet Not Available",
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              ),
+        title: const Text('Users'),
+        // Container(
+        //   padding: const EdgeInsets.all(10),
+        //   color: Colors.red,
+        //   child: const Text(
+        //     "Internet Not Available",
+        //     style: TextStyle(color: Colors.white, fontSize: 18),
+        //   ),
+        // ),
       ),
       body: usersAsyncValue.when(
         data: (users) {
-          addToLocalDatabase(users);
-
+          // addToLocalDatabase(users);
           return RefreshIndicator(
             color: Colors.white,
             backgroundColor: Colors.blue,
             strokeWidth: 4.0,
             onRefresh: () async {
-              ref.invalidate(userProvider); // Refresh users
+              ref.invalidate(userProvider);
               return Future<void>.delayed(const Duration(seconds: 2));
             },
             child: ListView.builder(
@@ -111,11 +125,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            Center(child: Text("Error fetching users: $error")),
+        error: (error, stackTrace) => Center(child: Text("error: $error")),
       ),
       floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
         onPressed: () {
           showDialog(context: context, builder: (_) => _addUserDialog());
         },
