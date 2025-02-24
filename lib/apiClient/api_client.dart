@@ -2,7 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 
-final apiClientProvider = Provider((ref) => ApiClient());
+final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+
+final userProvider = FutureProvider<List<User>>((ref) async {
+  final apiClient = ref.watch(apiClientProvider);
+  return await apiClient.getUsers();
+});
 
 class ApiClient {
   final Dio _dio = Dio(BaseOptions(
@@ -14,7 +19,6 @@ class ApiClient {
   Future<List<User>> getUsers() async {
     Response response = await _dio.get('/users');
     Map<String, dynamic> data = response.data;
-    var userList = UserBaseModel.fromJson(data).users;
-    return userList;
+    return UserBaseModel.fromJson(data).users;
   }
 }
