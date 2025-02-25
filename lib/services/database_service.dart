@@ -1,7 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../models/user_model.dart';
+import '../features/users/data/model/user_model.dart';
 
 class DatabaseService {
   static Database? _db;

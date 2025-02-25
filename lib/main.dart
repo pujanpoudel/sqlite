@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqlite/screens/home_screen.dart';
+import 'package:sqlite/features/users/presentation/user_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
