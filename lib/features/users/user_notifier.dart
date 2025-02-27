@@ -1,28 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'data/model/user_model.dart';
-import 'data/user_repo_impl.dart';
+import 'package:sqlite/features/users/data/model/user_model.dart';
+import 'package:sqlite/features/users/data/user_repo_impl.dart';
 
 final userNotifierProvider =
     StateNotifierProvider<UserNotifier, List<User>>((ref) {
-  return UserNotifier(ref);
+  return UserNotifier();
 });
 
 class UserNotifier extends StateNotifier<List<User>> {
-  final Ref _ref;
-  UserNotifier(this._ref) : super([]) {
+  final UserRepositoryImpl _userRepo = UserRepositoryImpl();
+
+  UserNotifier() : super([]) {
     _initialize();
   }
 
   Future<void> _initialize() async {
     try {
-      final users =
-          await _ref.read(userRepositoryImplProvider).fetchUsersRemote();
+      final users = await _userRepo.fetchUsersRepo();
       state = users;
     } catch (e) {
       print("Error fetching users: $e");
     }
   }
 
+  /// Manually refresh users
   Future<void> refreshUsers() async {
     await _initialize();
   }

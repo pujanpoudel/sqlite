@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqlite/features/users/data/model/user_model.dart';
 import 'package:sqlite/features/users/user_notifier.dart';
+import 'package:sqlite/services/connectivity_service.dart';
 import 'package:sqlite/services/database_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -17,45 +18,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _mailController = TextEditingController();
   final DatabaseService _databaseService = DatabaseService.instance;
-  var hasInternet = false;
+  var isOnline = true;
   @override
   void initState() {
     super.initState();
   }
 
-  // checkInternet() async {
-  //   final ConnectivityService _connectivityService = ConnectivityService();
-  //   bool isConnected = await _connectivityService.isConnected();
-  //   hasInternet = isConnected;
-  // }
+  checkInternet() async {
+    final ConnectivityService connectivityService = ConnectivityService();
+    bool isConnected = await connectivityService.isConnected();
+    isOnline = isConnected;
+  }
 
   @override
   Widget build(BuildContext context) {
     final users = ref.watch(userNotifierProvider);
+    final userNotifier = ref.read(userNotifierProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Users'),
-        // Container(
-        //   padding: const EdgeInsets.all(10),
-        //   color: Colors.red,
-        //   child: const Text(
-        //     "Internet Not Available",
-        //     style: TextStyle(color: Colors.white, fontSize: 18),
-        //   ),
-        // ),
+        title:
+            isOnline ? const Text('Users') : const Text('Users(Offline Mode)'),
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                print("Pressed Refresh");
+                userNotifier.refreshUsers();
+              }),
+        ],
       ),
       body: users.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
+              onRefresh: () => userNotifier.refreshUsers(),
               color: Colors.white,
               backgroundColor: Colors.blue,
               strokeWidth: 4.0,
-              onRefresh: () async {
-                ref.invalidate(userNotifierProvider);
-                return Future<void>.delayed(const Duration(seconds: 2));
-              },
               child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: users.length,
