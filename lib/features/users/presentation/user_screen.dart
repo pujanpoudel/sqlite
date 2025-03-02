@@ -32,65 +32,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final users = ref.watch(userNotifierProvider);
+    final userState = ref.watch(userNotifierProvider);
     final userNotifier = ref.read(userNotifierProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title:
-            isOnline ? const Text('Users') : const Text('Users(Offline Mode)'),
+        title: const Text('Users'),
         actions: [
           IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () {
-                print("Pressed Refresh");
-                userNotifier.refreshUsers();
-              }),
+            icon: const Icon(Icons.refresh),
+            onPressed: () => userNotifier.refreshUsers(),
+          ),
         ],
       ),
-      body: users.isEmpty
+      body: userState.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () => userNotifier.refreshUsers(),
-              color: Colors.white,
-              backgroundColor: Colors.blue,
-              strokeWidth: 4.0,
-              child: ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  User user = users[index];
-                  return GestureDetector(
-                    onTap: () {
-                      showDialog(
-                          context: context,
-                          builder: (_) => _editUserDialog(user));
-                    },
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(10),
-                      tileColor: Colors.purple.shade50,
-                      shape: const RoundedRectangleBorder(
-                        side: BorderSide(color: Colors.grey, width: 1),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () async {
-                          await _databaseService.deleteUser(user.id);
-                          ref.invalidate(userNotifierProvider);
+          : userState.error != null
+              ? RefreshIndicator(
+                  onRefresh: () => userNotifier.refreshUsers(),
+                  color: Colors.white,
+                  backgroundColor: Colors.blue,
+                  strokeWidth: 4.0,
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: userState.users.length,
+                    itemBuilder: (context, index) {
+                      User user = userState.users[index];
+                      return GestureDetector(
+                        onTap: () {
+                          showDialog(
+                              context: context,
+                              builder: (_) => _editUserDialog(user));
                         },
-                      ),
-                      title: Text(
-                        "${user.id}. ${user.name} ${user.age}y/o ${user.gender}",
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20),
-                      ),
-                      subtitle: Text("mail: ${user.email}"),
-                    ),
-                  );
-                },
-              ),
-            ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(10),
+                          tileColor: Colors.purple.shade50,
+                          shape: const RoundedRectangleBorder(
+                            side: BorderSide(color: Colors.grey, width: 1),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () async {
+                              await _databaseService.deleteUser(user.id);
+                              ref.invalidate(userNotifierProvider);
+                            },
+                          ),
+                          title: Text(
+                            "${user.id}. ${user.name} ${user.age}y/o ${user.gender}",
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20),
+                          ),
+                          subtitle: Text("mail: ${user.email}"),
+                        ),
+                      );
+                    },
+                  ),
+                )
+              : Center(
+                  child: Text(userState.error!,
+                      style: const TextStyle(color: Colors.red, fontSize: 18))),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
