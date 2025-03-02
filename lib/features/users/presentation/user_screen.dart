@@ -38,7 +38,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Users'),
+        title: Text(
+            'Users ${userState.error} ${userState.users.length} ${userState.isLoading} ${userState.isLoaded}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -46,52 +47,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: userState.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : userState.error != null
-              ? RefreshIndicator(
-                  onRefresh: () => userNotifier.refreshUsers(),
-                  color: Colors.white,
-                  backgroundColor: Colors.blue,
-                  strokeWidth: 4.0,
-                  child: ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: userState.users.length,
-                    itemBuilder: (context, index) {
-                      User user = userState.users[index];
-                      return GestureDetector(
-                        onTap: () {
-                          showDialog(
-                              context: context,
-                              builder: (_) => _editUserDialog(user));
-                        },
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(10),
-                          tileColor: Colors.purple.shade50,
-                          shape: const RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.grey, width: 1),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () async {
-                              await _databaseService.deleteUser(user.id);
-                              ref.invalidate(userNotifierProvider);
-                            },
-                          ),
-                          title: Text(
-                            "${user.id}. ${user.name} ${user.age}y/o ${user.gender}",
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 20),
-                          ),
-                          subtitle: Text("mail: ${user.email}"),
-                        ),
-                      );
+      body: Builder(builder: (context) {
+        if (userState.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (userState.error != null) {
+          return const Center(
+            child: Text("userState.error",
+                style: TextStyle(color: Colors.red, fontSize: 18)),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () => userNotifier.refreshUsers(),
+          color: Colors.white,
+          backgroundColor: Colors.blue,
+          strokeWidth: 4.0,
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: userState.users.length,
+            itemBuilder: (context, index) {
+              User user = userState.users[index];
+              return GestureDetector(
+                onTap: () {
+                  showDialog(
+                      context: context, builder: (_) => _editUserDialog(user));
+                },
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(10),
+                  tileColor: Colors.purple.shade50,
+                  shape: const RoundedRectangleBorder(
+                    side: BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () async {
+                      await _databaseService.deleteUser(user.id);
+                      ref.invalidate(userNotifierProvider);
                     },
                   ),
-                )
-              : Center(
-                  child: Text(userState.error!,
-                      style: const TextStyle(color: Colors.red, fontSize: 18))),
+                  title: Text(
+                    "${user.id}. ${user.name} ${user.age}y/o ${user.gender}",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
+                  subtitle: Text("mail: ${user.email}"),
+                ),
+              );
+            },
+          ),
+        );
+      }),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {

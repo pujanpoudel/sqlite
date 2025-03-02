@@ -21,6 +21,7 @@ class UserNotifier extends StateNotifier<UserState> {
       );
       final users = await _userRepo.fetchUsersRepo();
       state = state.copyWith(isLoading: false, users: users);
+      state = state.copyWith(isLoaded: true, users: users);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Failed to load users");
       print("Error fetching users: $e");
