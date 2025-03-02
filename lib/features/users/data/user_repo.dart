@@ -1,4 +1,4 @@
-import 'package:sqlite/models/user_model.dart';
+import 'package:sqlite/features/users/data/model/user_model.dart';
 
 abstract class UserRepository {
   Future<List<User>> fetchUsersRepo();

@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/user_model.dart';
+import '../features/users/data/model/user_model.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 
